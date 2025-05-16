@@ -31,7 +31,7 @@ def load_data(uploaded_file):
         st.warning(f"Format data tidak sesuai. Pastikan kolom 'Tanggal' dan 'Harga' tersedia.")
         return None
 
-# 🤖 Training Model ARIMA
+#  Training Model ARIMA
 @st.cache_resource
 def train_and_evaluate_model(df):
     train_size = int(len(df) * 0.8)
@@ -58,7 +58,7 @@ def train_and_evaluate_model(df):
 
     return model_fit, mae, rmse, mape_percentage
 
-# 🔮 Prediksi Harga Masa Depan
+#  Prediksi Harga Masa Depan
 def predict(start, end, df, model_fit):
     selisih_hari = (end - start).days + 1
     forecast = model_fit.forecast(steps=selisih_hari)
@@ -91,7 +91,7 @@ def evaluate_model(mae, rmse, mape_percentage):
         st.metric("MAPE", f"{mape_percentage:.1f}%")
 
 # 🧾 Upload Data Excel
-st.title("🛢️ Prediksi Harga Komoditas Menggunakan ARIMA")
+st.title("Forecasting Harga Komoditas Menggunakan ARIMA")
 
 uploaded_file = st.file_uploader("📂 Upload File Excel", type=".xlsx", help="Pastikan memiliki kolom 'Tanggal' dan 'Harga'")
 
@@ -115,7 +115,7 @@ st.sidebar.subheader("📅 Pilih Tanggal Prediksi")
 start = st.sidebar.date_input("Tanggal Mulai", value=start_date, disabled=True)
 end = st.sidebar.date_input("Tanggal Selesai", value=None, min_value=start_date + pd.Timedelta(days=1))
 
-if st.sidebar.button("🔮 Prediksi!", use_container_width=True):
+if st.sidebar.button("Prediksi!", use_container_width=True):
     if end is None:
         st.warning("Silakan pilih tanggal selesai.")
     elif end <= start:
