@@ -124,4 +124,3 @@ if st.sidebar.button("Prediksi!", use_container_width=True):
         model_fit, mae, rmse, mape_percentage = train_and_evaluate_model(df)
         evaluate_model(mae, rmse, mape_percentage)
         predict(start, end, df, model_fit)
-
