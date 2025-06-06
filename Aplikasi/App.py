@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
 # ✅ Konfigurasi Halaman
-st.set_page_config(page_title="Prediksi Harga Komoditas", layout="wide", page_icon="🛢️")
+st.set_page_config(page_title="Prediksi Harga Komoditas", layout="wide", page_icon="🛢")
 
 # 🔄 Load dan Preprocessing Data
 @st.cache_data
@@ -14,7 +14,7 @@ def load_data(uploaded_file):
     try:
         df = pd.read_excel(uploaded_file)
         df = df[["Tanggal", "Harga"]]
-        df["Tanggal"] = pd.to_datetime(df["Tanggal"],format="%Y/%m/%d", errors='coerce')
+        df["Tanggal"] = pd.to_datetime(df["Tanggal"], format="%Y/%m/%d", errors='coerce')
         df = df.dropna(subset=["Tanggal", "Harga"])
         df["Harga"] = pd.to_numeric(df["Harga"], errors='coerce')
         df = df.dropna()
@@ -28,16 +28,16 @@ def load_data(uploaded_file):
             return None
         return df
     except Exception as e:
-        st.warning(f"Format data tidak sesuai. Pastikan kolom 'Tanggal' dan 'Harga' tersedia.")
+        st.warning("Format data tidak sesuai. Pastikan kolom 'Tanggal' dan 'Harga' tersedia.")
         return None
 
-#  Training Model ARIMA
+# 🤖 Training Model ARIMA
 @st.cache_resource
 def train_and_evaluate_model(df):
     train_size = int(len(df) * 0.8)
     train, test = df.iloc[:train_size], df.iloc[train_size:]
 
-    model = ARIMA(train['Harga'], order=(0, 1, 0), enforce_stationarity=False, enforce_invertibility=False)
+    model = ARIMA(train['Harga'], order=(2, 1, 2), enforce_stationarity=False, enforce_invertibility=False)
     model_fit = model.fit()
 
     history = list(train['Harga'])
@@ -45,7 +45,7 @@ def train_and_evaluate_model(df):
     actual_values = list(test['Harga'])
 
     for t in range(len(test)):
-        model = ARIMA(history, order=(0, 1, 0), enforce_stationarity=False, enforce_invertibility=False)
+        model = ARIMA(history, order=(2, 1, 2), enforce_stationarity=False, enforce_invertibility=False)
         model_fit = model.fit()
         yhat = model_fit.forecast()[0]
         predictions.append(yhat)
@@ -58,7 +58,7 @@ def train_and_evaluate_model(df):
 
     return model_fit, mae, rmse, mape_percentage
 
-#  Prediksi Harga Masa Depan
+# 🔮 Prediksi Harga Masa Depan + Kolom Perubahan
 def predict(start, end, df, model_fit):
     selisih_hari = (end - start).days + 1
     forecast = model_fit.forecast(steps=selisih_hari)
@@ -66,8 +66,26 @@ def predict(start, end, df, model_fit):
 
     last_date = df.index[-1]
     forecast_dates = [last_date + pd.Timedelta(days=i) for i in range(1, selisih_hari + 1)]
-    forecast_df = pd.DataFrame({"Tanggal": forecast_dates, "Prediksi Harga": forecast})
+
+    forecast_df = pd.DataFrame({
+        "Tanggal": forecast_dates,
+        "Prediksi Harga": forecast
+    })
     forecast_df.set_index("Tanggal", inplace=True)
+
+    # Tambahkan kolom perubahan
+    perubahan = []
+    prev_price = df["Harga"].iloc[-1]
+    for harga in forecast_df["Prediksi Harga"]:
+        if harga > prev_price:
+            perubahan.append("↑")
+        elif harga < prev_price:
+            perubahan.append("↓")
+        else:
+            perubahan.append("=")
+        prev_price = harga
+
+    forecast_df["Perubahan"] = perubahan
 
     st.subheader(f"📈 Prediksi Harga {selisih_hari} Hari Kedepan")
     with st.expander("🔍 Lihat Detail Prediksi"):
@@ -81,7 +99,7 @@ def predict(start, end, df, model_fit):
 
 # 📊 Evaluasi Model
 def evaluate_model(mae, rmse, mape_percentage):
-    col1, col2, col3 = st.columns([1, 1, 1])
+    col1, col2, col3 = st.columns([2, 1, 2])
 
     with col1:
         st.metric("MAE", f"{mae:.1f}")
@@ -91,7 +109,7 @@ def evaluate_model(mae, rmse, mape_percentage):
         st.metric("MAPE", f"{mape_percentage:.1f}%")
 
 # 🧾 Upload Data Excel
-st.title("Forecasting Harga Komoditas Menggunakan ARIMA")
+st.title("🛢 Prediksi Harga Komoditas Menggunakan ARIMA")
 
 uploaded_file = st.file_uploader("📂 Upload File Excel", type=".xlsx", help="Pastikan memiliki kolom 'Tanggal' dan 'Harga'")
 
@@ -115,7 +133,7 @@ st.sidebar.subheader("📅 Pilih Tanggal Prediksi")
 start = st.sidebar.date_input("Tanggal Mulai", value=start_date, disabled=True)
 end = st.sidebar.date_input("Tanggal Selesai", value=None, min_value=start_date + pd.Timedelta(days=1))
 
-if st.sidebar.button("Prediksi!", use_container_width=True):
+if st.sidebar.button("🔮 Prediksi!", use_container_width=True):
     if end is None:
         st.warning("Silakan pilih tanggal selesai.")
     elif end <= start:
