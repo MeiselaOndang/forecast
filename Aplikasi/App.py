@@ -109,7 +109,7 @@ def evaluate_model(mae, rmse, mape_percentage):
         st.metric("MAPE", f"{mape_percentage:.1f}%")
 
 # 🧾 Upload Data Excel
-st.title("🛢 Prediksi Harga Komoditas Menggunakan ARIMA")
+st.title("Forecasting Harga Komoditas Menggunakan ARIMA")
 
 uploaded_file = st.file_uploader("📂 Upload File Excel", type=".xlsx", help="Pastikan memiliki kolom 'Tanggal' dan 'Harga'")
 
@@ -133,7 +133,7 @@ st.sidebar.subheader("📅 Pilih Tanggal Prediksi")
 start = st.sidebar.date_input("Tanggal Mulai", value=start_date, disabled=True)
 end = st.sidebar.date_input("Tanggal Selesai", value=None, min_value=start_date + pd.Timedelta(days=1))
 
-if st.sidebar.button("🔮 Prediksi!", use_container_width=True):
+if st.sidebar.button("Prediksi", use_container_width=True):
     if end is None:
         st.warning("Silakan pilih tanggal selesai.")
     elif end <= start:
